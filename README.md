@@ -1,6 +1,6 @@
-# news-tui
+# foxden
 
-`news-tui` is an experimental terminal news reader and scraper frontend written in Go.
+`foxden` is an experimental terminal news reader and scraper frontend written in Go.
 
 The aim is to build a local-first TUI news cockpit with configurable topic tabs. Each topic can pull from different kinds of sources: RSS feeds, web pages, GitHub releases, forums, working group notes, and eventually custom scrapers.
 
@@ -56,7 +56,7 @@ nix develop
 Run the app:
 
 ```bash
-go run ./cmd/news-tui
+go run ./cmd/foxden
 ```
 
 Or, if `just` is available:
@@ -183,7 +183,7 @@ The `t` key cycles through these in order.
 The code is split into small internal packages:
 
 ```text
-cmd/news-tui/
+cmd/foxden/
   main.go              executable entrypoint
 
 internal/app/
@@ -230,7 +230,7 @@ New commands:
 
 ## SQLite-backed persistence
 
-The app stores development data in .news-tui.db in the project root.
+The app stores development data in .foxden.db in the project root.
 This is intentionally temporary; later it should move to an XDG data directory.
 Stories are loaded from db
 

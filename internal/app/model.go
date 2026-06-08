@@ -5,8 +5,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/patjrobinson/news-tui/internal/ai"
-	"github.com/patjrobinson/news-tui/internal/core"
+	"github.com/patjrobinson/foxden/internal/ai"
+	"github.com/patjrobinson/foxden/internal/core"
 )
 
 type Model struct {

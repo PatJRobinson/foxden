@@ -8,7 +8,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/patjrobinson/news-tui/internal/core"
+	"github.com/patjrobinson/foxden/internal/core"
 )
 
 type topicFile struct {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/patjrobinson/news-tui/internal/core"
+	"github.com/patjrobinson/foxden/internal/core"
 )
 
 func DemoTopics() []core.Topic {

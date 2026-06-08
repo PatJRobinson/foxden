@@ -1,6 +1,6 @@
 package app
 
-import "github.com/patjrobinson/news-tui/internal/core"
+import "github.com/patjrobinson/foxden/internal/core"
 
 type topicStoriesLoadedMsg struct {
 	TopicID string

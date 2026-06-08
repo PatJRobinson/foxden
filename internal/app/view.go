@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/patjrobinson/news-tui/internal/core"
+	"github.com/patjrobinson/foxden/internal/core"
 )
 
 func (m Model) View() string {
@@ -53,7 +53,7 @@ func (m Model) renderHeader() string {
 	topic := m.CurrentTopic()
 
 	return titleStyle.Render(
-		fmt.Sprintf("news-tui  topic=%s  range=%s", topic.Title, m.TimeRange),
+		fmt.Sprintf("foxden  topic=%s  range=%s", topic.Title, m.TimeRange),
 	)
 }
 

@@ -3,7 +3,7 @@ package ingest
 import (
 	"context"
 
-	"github.com/patjrobinson/news-tui/internal/core"
+	"github.com/patjrobinson/foxden/internal/core"
 )
 
 type Fetcher interface {

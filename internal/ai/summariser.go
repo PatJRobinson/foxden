@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/patjrobinson/news-tui/internal/core"
+	"github.com/patjrobinson/foxden/internal/core"
 )
 
 type SummaryRequest struct {

@@ -7,9 +7,9 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/patjrobinson/news-tui/internal/app"
-	"github.com/patjrobinson/news-tui/internal/config"
-	"github.com/patjrobinson/news-tui/internal/store"
+	"github.com/patjrobinson/foxden/internal/app"
+	"github.com/patjrobinson/foxden/internal/config"
+	"github.com/patjrobinson/foxden/internal/store"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 		topics = app.DemoTopics()
 	}
 
-	db, err := store.Open(".news-tui.db")
+	db, err := store.Open(".foxden.db")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to open database: %v\n", err)
 	} else {
@@ -39,7 +39,7 @@ func main() {
 
 	program := tea.NewProgram(model, tea.WithAltScreen())
 	if _, err := program.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "error running news-tui: %v\n", err)
+		fmt.Fprintf(os.Stderr, "error running foxden: %v\n", err)
 		os.Exit(1)
 	}
 }

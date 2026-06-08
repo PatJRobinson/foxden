@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/patjrobinson/news-tui/internal/core"
+	"github.com/patjrobinson/foxden/internal/core"
 )
 
 type GitHubReleasesFetcher struct {
@@ -58,7 +58,7 @@ func (f GitHubReleasesFetcher) Fetch(ctx context.Context, topic core.Topic, sour
 	}
 
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("User-Agent", "news-tui/0.1")
+	req.Header.Set("User-Agent", "foxden/0.1")
 
 	// Optional: allows higher rate limits if the user exports GITHUB_TOKEN.
 	if token := strings.TrimSpace(getenv("GITHUB_TOKEN")); token != "" {

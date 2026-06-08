@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/patjrobinson/news-tui/internal/core"
-	"github.com/patjrobinson/news-tui/internal/ingest"
-	"github.com/patjrobinson/news-tui/internal/store"
+	"github.com/patjrobinson/foxden/internal/core"
+	"github.com/patjrobinson/foxden/internal/ingest"
+	"github.com/patjrobinson/foxden/internal/store"
 )
 
 type Services struct {

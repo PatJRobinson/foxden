@@ -5,16 +5,16 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"net/http"
-	"strings"
-	"time"
 	"html"
 	"io"
+	"net/http"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/mmcdole/gofeed"
 
-	"github.com/patjrobinson/news-tui/internal/core"
+	"github.com/patjrobinson/foxden/internal/core"
 
 	nethtml "golang.org/x/net/html"
 )
@@ -51,7 +51,7 @@ func (f RSSFetcher) Fetch(ctx context.Context, topic core.Topic, source core.Sou
 		return nil, fmt.Errorf("create rss request %q: %w", source.URL, err)
 	}
 
-	req.Header.Set("User-Agent", "news-tui/0.1")
+	req.Header.Set("User-Agent", "foxden/0.1")
 
 	resp, err := client.Do(req)
 	if err != nil {
