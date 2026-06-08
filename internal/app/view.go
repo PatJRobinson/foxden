@@ -92,9 +92,34 @@ func (m Model) renderBody() string {
 func (m Model) renderStoryList(stories []core.Story) string {
 	var b strings.Builder
 
-	b.WriteString("Stories\n")
+	visible := m.visibleStoryCount()
+	if visible <= 0 {
+		visible = 5
+	}
 
-	for i, story := range stories {
+	start := m.StoryOffset
+	if start < 0 {
+		start = 0
+	}
+	if start > len(stories) {
+		start = len(stories)
+	}
+
+	end := start + visible
+	if end > len(stories) {
+		end = len(stories)
+	}
+
+	b.WriteString(fmt.Sprintf("Stories %d/%d\n", m.ActiveStory+1, len(stories)))
+
+	if start > 0 {
+		b.WriteString(mutedStyle.Render("  ↑ more"))
+		b.WriteString("\n")
+	}
+
+	for i := start; i < end; i++ {
+		story := stories[i]
+
 		cursor := " "
 		line := fmt.Sprintf("%s %s  %s", cursor, story.Title, mutedStyle.Render(story.SourceName))
 
@@ -105,6 +130,11 @@ func (m Model) renderStoryList(stories []core.Story) string {
 		}
 
 		b.WriteString(line)
+		b.WriteString("\n")
+	}
+
+	if end < len(stories) {
+		b.WriteString(mutedStyle.Render("  ↓ more"))
 		b.WriteString("\n")
 	}
 

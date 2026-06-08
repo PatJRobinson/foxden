@@ -221,13 +221,25 @@ topic config
 
 The TUI should remain separate from ingestion, storage, and AI provider details.
 
+## RSS fetcher
+
+Gets stories based on topic metadata
+New commands:
+- 'r': refresh active topic
+- 'R': refresh all topics
+
+## SQLite-backed persistence
+
+The app stores development data in .news-tui.db in the project root.
+This is intentionally temporary; later it should move to an XDG data directory.
+Stories are loaded from db
+
 ## Planned next steps
 
 Likely next branches:
 
 ### RSS ingestion and SQLite-backed stories
 
-* Implement an RSS fetcher using `gofeed`
 * Generate stable story IDs
 * Store fetched stories in SQLite
 * Load stories from SQLite into the TUI

@@ -14,6 +14,7 @@ type Model struct {
 
 	ActiveTopic int
 	ActiveStory int
+	StoryOffset int
 	TimeRange   core.TimeRange
 
 	Stories map[string][]core.Story
