@@ -1,0 +1,18 @@
+# topics/ros2/topic.yaml
+id: ros2
+title: ROS2
+
+sources:
+  - id: ros-discourse
+    name: ROS Discourse
+    type: rss
+    url: https://discourse.ros.org/c/ros2.rss
+
+  - id: nav2-github
+    name: Nav2 GitHub Releases
+    type: github_releases
+    repo: ros-navigation/navigation2
+
+summary:
+  agents: AGENTS.md
+  default_range: week

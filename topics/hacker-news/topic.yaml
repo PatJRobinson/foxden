@@ -1,0 +1,13 @@
+# topics/hacker-news/topic.yaml
+id: hacker-news
+title: Hacker News
+
+sources:
+  - id: hn-rss
+    name: Hacker News RSS
+    type: rss
+    url: https://news.ycombinator.com/rss
+
+summary:
+  agents: AGENTS.md
+  default_range: day
