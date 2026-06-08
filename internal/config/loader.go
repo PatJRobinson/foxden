@@ -12,10 +12,10 @@ import (
 )
 
 type topicFile struct {
-	ID      string              `yaml:"id"`
-	Title   string              `yaml:"title"`
-	Sources []sourceFile        `yaml:"sources"`
-	Summary summaryConfigFile   `yaml:"summary"`
+	ID      string            `yaml:"id"`
+	Title   string            `yaml:"title"`
+	Sources []sourceFile      `yaml:"sources"`
+	Summary summaryConfigFile `yaml:"summary"`
 }
 
 type sourceFile struct {

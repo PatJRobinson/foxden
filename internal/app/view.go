@@ -1,0 +1,115 @@
+package app
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/patjrobinson/news-tui/internal/core"
+)
+
+func (m Model) View() string {
+	var b strings.Builder
+
+	b.WriteString(m.renderHeader())
+	b.WriteString("\n")
+	b.WriteString(m.renderTabs())
+	b.WriteString("\n\n")
+	b.WriteString(m.renderBody())
+	b.WriteString("\n")
+	b.WriteString(m.renderFooter())
+
+	return b.String()
+}
+
+func (m Model) renderHeader() string {
+	topic := m.CurrentTopic()
+
+	return titleStyle.Render(
+		fmt.Sprintf("news-tui  topic=%s  range=%s", topic.Title, m.TimeRange),
+	)
+}
+
+func (m Model) renderTabs() string {
+	if len(m.Topics) == 0 {
+		return mutedStyle.Render("no topics")
+	}
+
+	var parts []string
+
+	for i, topic := range m.Topics {
+		label := fmt.Sprintf("[%s]", topic.Title)
+		if i == m.ActiveTopic {
+			parts = append(parts, activeTabStyle.Render(label))
+		} else {
+			parts = append(parts, inactiveTabStyle.Render(label))
+		}
+	}
+
+	return strings.Join(parts, " ")
+}
+
+func (m Model) renderBody() string {
+	stories := m.CurrentStories()
+
+	if len(stories) == 0 {
+		return mutedStyle.Render("No stories for this topic yet.")
+	}
+
+	list := m.renderStoryList(stories)
+	preview := m.renderPreview()
+
+	return list + "\n\n" + preview
+}
+
+func (m Model) renderStoryList(stories []core.Story) string {
+	var b strings.Builder
+
+	b.WriteString("Stories\n")
+
+	for i, story := range stories {
+		cursor := " "
+		line := fmt.Sprintf("%s %s  %s", cursor, story.Title, mutedStyle.Render(story.SourceName))
+
+		if i == m.ActiveStory {
+			cursor = ">"
+			line = fmt.Sprintf("%s %s  %s", cursor, story.Title, mutedStyle.Render(story.SourceName))
+			line = selectedStoryStyle.Render(line)
+		}
+
+		b.WriteString(line)
+		b.WriteString("\n")
+	}
+
+	return b.String()
+}
+
+func (m Model) renderPreview() string {
+	story, ok := m.CurrentStory()
+	if !ok {
+		return mutedStyle.Render("No story selected.")
+	}
+
+	var b strings.Builder
+
+	b.WriteString("Preview\n")
+	b.WriteString(boxStyle.Render(fmt.Sprintf(
+		"%s\n\n%s\n\n%s\n%s",
+		story.Title,
+		story.Excerpt,
+		mutedStyle.Render(story.URL),
+		mutedStyle.Render(fmt.Sprintf("source: %s", story.SourceName)),
+	)))
+
+	return b.String()
+}
+
+func (m Model) renderFooter() string {
+	leader := ""
+	if m.LeaderPending {
+		leader = " leader"
+	}
+
+	return footerStyle.Render(
+		fmt.Sprintf("h/l tabs  j/k stories  t range  ,+space summary soon  q quit%s", leader),
+	)
+}
