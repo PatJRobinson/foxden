@@ -34,8 +34,6 @@ Implemented:
 
 Not implemented yet:
 
-* Real RSS fetching in the running TUI
-* SQLite-backed story loading in the TUI
 * Real scraping
 * Real AI provider integration
 * Opening stories in a browser
