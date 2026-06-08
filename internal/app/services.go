@@ -19,7 +19,8 @@ func NewServices(db *store.DB) Services {
 	return Services{
 		Store: db,
 		Ingest: ingest.NewManager(map[string]ingest.Fetcher{
-			"rss": ingest.NewRSSFetcher(),
+			"rss":             ingest.NewRSSFetcher(),
+			"github_releases": ingest.NewGitHubReleasesFetcher(),
 		}),
 		Now: time.Now,
 	}

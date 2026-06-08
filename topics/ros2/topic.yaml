@@ -6,7 +6,7 @@ sources:
   - id: ros-discourse
     name: ROS Discourse
     type: rss
-    url: https://discourse.ros.org/c/ros2.rss
+    url: https://discourse.openrobotics.org/latest.rss
 
   - id: nav2-github
     name: Nav2 GitHub Releases

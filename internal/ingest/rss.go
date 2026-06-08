@@ -8,10 +8,15 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"html"
+	"io"
+	"regexp"
 
 	"github.com/mmcdole/gofeed"
 
 	"github.com/patjrobinson/news-tui/internal/core"
+
+	nethtml "golang.org/x/net/html"
 )
 
 type RSSFetcher struct {
@@ -77,6 +82,9 @@ func (f RSSFetcher) Fetch(ctx context.Context, topic core.Topic, source core.Sou
 			continue
 		}
 
+		rawText := firstNonEmpty(item.Description, item.Content)
+		cleanText := cleanFeedText(rawText)
+
 		stories = append(stories, core.Story{
 			ID:          storyID(topic.ID, source.ID, url),
 			TopicID:     topic.ID,
@@ -87,8 +95,8 @@ func (f RSSFetcher) Fetch(ctx context.Context, topic core.Topic, source core.Sou
 			Author:      authorName(item),
 			PublishedAt: publishedTime(item),
 			FetchedAt:   now,
-			Excerpt:     firstNonEmpty(item.Description, item.Content),
-			Content:     item.Content,
+			Excerpt:     truncateText(cleanText, 500),
+			Content:     cleanText,
 		})
 	}
 
@@ -133,4 +141,112 @@ func firstNonEmpty(values ...string) string {
 func storyID(topicID string, sourceID string, url string) string {
 	sum := sha256.Sum256([]byte(topicID + "\x00" + sourceID + "\x00" + url))
 	return hex.EncodeToString(sum[:])
+}
+
+var (
+	htmlTagRE        = regexp.MustCompile(`<[^>]+>`)
+	whitespaceRE     = regexp.MustCompile(`\s+`)
+	discourseQuoteRE = regexp.MustCompile(`(?is)<aside[^>]*class="quote"[^>]*>.*?</aside>`)
+)
+
+func cleanFeedText(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+
+	var b strings.Builder
+	tokenizer := nethtml.NewTokenizer(strings.NewReader(value))
+
+	skipDepth := 0
+
+	for {
+		tokenType := tokenizer.Next()
+
+		switch tokenType {
+		case nethtml.ErrorToken:
+			if tokenizer.Err() == io.EOF {
+				text := html.UnescapeString(b.String())
+				text = whitespaceRE.ReplaceAllString(text, " ")
+				return strings.TrimSpace(text)
+			}
+
+			// Fall back to a simple unescape if tokenization fails.
+			text := html.UnescapeString(value)
+			text = whitespaceRE.ReplaceAllString(text, " ")
+			return strings.TrimSpace(text)
+
+		case nethtml.StartTagToken:
+			token := tokenizer.Token()
+			tag := strings.ToLower(token.Data)
+
+			if tag == "script" || tag == "style" {
+				skipDepth++
+				continue
+			}
+
+			if tag == "aside" && hasClass(token, "quote") {
+				skipDepth++
+				continue
+			}
+
+			if skipDepth > 0 {
+				continue
+			}
+
+			if tag == "p" || tag == "br" || tag == "li" || tag == "div" || tag == "blockquote" {
+				b.WriteString(" ")
+			}
+
+		case nethtml.EndTagToken:
+			token := tokenizer.Token()
+			tag := strings.ToLower(token.Data)
+
+			if skipDepth > 0 {
+				if tag == "script" || tag == "style" || tag == "aside" {
+					skipDepth--
+				}
+				continue
+			}
+
+			if tag == "p" || tag == "li" || tag == "div" || tag == "blockquote" {
+				b.WriteString(" ")
+			}
+
+		case nethtml.TextToken:
+			if skipDepth > 0 {
+				continue
+			}
+
+			text := strings.TrimSpace(string(tokenizer.Text()))
+			if text != "" {
+				b.WriteString(text)
+				b.WriteString(" ")
+			}
+		}
+	}
+}
+
+func hasClass(token nethtml.Token, className string) bool {
+	for _, attr := range token.Attr {
+		if strings.EqualFold(attr.Key, "class") {
+			classes := strings.Fields(attr.Val)
+			for _, class := range classes {
+				if class == className {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func truncateText(value string, max int) string {
+	value = strings.TrimSpace(value)
+	if max <= 0 || len(value) <= max {
+		return value
+	}
+
+	return strings.TrimSpace(value[:max]) + "…"
 }
