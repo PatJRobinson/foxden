@@ -1,8 +1,11 @@
 package app
 
 import (
+	"context"
+
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/patjrobinson/news-tui/internal/ai"
 	"github.com/patjrobinson/news-tui/internal/core"
 )
 
@@ -20,6 +23,10 @@ type Model struct {
 
 	LeaderPending bool
 
+	OverlayOpen bool
+	OverlayText string
+	Summariser  ai.Summariser
+
 	Err error
 }
 
@@ -36,6 +43,7 @@ func NewModel(topics []core.Topic) Model {
 		ActiveStory: 0,
 		TimeRange:   initialTimeRange(topics[0]),
 		Stories:     stories,
+		Summariser:  ai.PlaceholderSummariser{},
 	}
 }
 
@@ -71,6 +79,22 @@ func (m Model) CurrentStory() (core.Story, bool) {
 	}
 
 	return stories[m.ActiveStory], true
+}
+
+func (m Model) BuildSummary() (string, error) {
+	topic := m.CurrentTopic()
+
+	summary, err := m.Summariser.Summarise(context.Background(), ai.SummaryRequest{
+		TopicTitle: topic.Title,
+		TimeRange:  m.TimeRange,
+		AgentsMD:   topic.Agents,
+		Stories:    m.CurrentStories(),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return summary.Text, nil
 }
 
 func initialTimeRange(topic core.Topic) core.TimeRange {

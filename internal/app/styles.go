@@ -27,4 +27,10 @@ var (
 	boxStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			Padding(1, 2)
+	overlayStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			Padding(1, 2)
+
+	errorStyle = lipgloss.NewStyle().
+			Bold(true)
 )

@@ -8,17 +8,45 @@ import (
 )
 
 func (m Model) View() string {
+	if m.OverlayOpen {
+		return m.renderOverlay()
+	}
 	var b strings.Builder
 
 	b.WriteString(m.renderHeader())
 	b.WriteString("\n")
 	b.WriteString(m.renderTabs())
 	b.WriteString("\n\n")
+
+	if m.Err != nil {
+		b.WriteString(errorStyle.Render(fmt.Sprintf("error: %v", m.Err)))
+		b.WriteString("\n\n")
+	}
+
 	b.WriteString(m.renderBody())
 	b.WriteString("\n")
 	b.WriteString(m.renderFooter())
 
-	return b.String()
+	base := b.String()
+
+	return base
+}
+
+func (m Model) renderOverlay() string {
+	text := m.OverlayText
+	if strings.TrimSpace(text) == "" {
+		text = "AI summary overlay\n\nNo summary text was generated.\n\n[esc/q close]"
+	}
+
+	width := m.Width - 8
+	if width < 40 {
+		width = 40
+	}
+	if width > 90 {
+		width = 90
+	}
+
+	return overlayStyle.Width(width).Render(text)
 }
 
 func (m Model) renderHeader() string {

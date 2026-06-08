@@ -17,6 +17,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.OverlayOpen {
+		switch msg.String() {
+		case "esc", "q":
+			m.OverlayOpen = false
+			m.OverlayText = ""
+			m.LeaderPending = false
+			return m, nil
+		case "ctrl+c":
+			return m, tea.Quit
+		default:
+			return m, nil
+		}
+	}
 	switch msg.String() {
 	case "ctrl+c", "q":
 		return m, tea.Quit
@@ -47,8 +60,14 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case " ":
 		if m.LeaderPending {
 			m.LeaderPending = false
-			// Commit 5 will open a summary overlay here.
-			m.Err = nil
+			text, err := m.BuildSummary()
+			if err != nil {
+				m.Err = err
+				return m, nil
+			}
+
+			m.OverlayText = text
+			m.OverlayOpen = true
 		}
 	default:
 		m.LeaderPending = false
