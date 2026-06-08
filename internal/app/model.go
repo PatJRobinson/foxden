@@ -27,12 +27,19 @@ type Model struct {
 	OverlayText string
 	Summariser  ai.Summariser
 
+	Services Services
+
 	Err error
 }
 
-func NewModel(topics []core.Topic) Model {
+func NewModel(topics []core.Topic, servicesArg ...Services) Model {
 	if len(topics) == 0 {
 		topics = DemoTopics()
+	}
+
+	var services Services
+	if len(servicesArg) > 0 {
+		services = servicesArg[0]
 	}
 
 	stories := DemoStories(topics)
@@ -44,6 +51,7 @@ func NewModel(topics []core.Topic) Model {
 		TimeRange:   initialTimeRange(topics[0]),
 		Stories:     stories,
 		Summariser:  ai.PlaceholderSummariser{},
+		Services:    services,
 	}
 }
 
