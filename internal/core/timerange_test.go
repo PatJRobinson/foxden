@@ -1,6 +1,9 @@
 package core
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestAllTimeRanges(t *testing.T) {
 	got := AllTimeRanges()
@@ -128,6 +131,61 @@ func TestTimeRangeString(t *testing.T) {
 
 			if got != tt.want {
 				t.Fatalf("%q.String() = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTimeRangeSince(t *testing.T) {
+	now := time.Date(2026, 6, 8, 12, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name string
+		in   TimeRange
+		want time.Time
+	}{
+		{
+			name: "day",
+			in:   TimeRangeDay,
+			want: time.Date(2026, 6, 7, 12, 0, 0, 0, time.UTC),
+		},
+		{
+			name: "week",
+			in:   TimeRangeWeek,
+			want: time.Date(2026, 6, 1, 12, 0, 0, 0, time.UTC),
+		},
+		{
+			name: "month",
+			in:   TimeRangeMonth,
+			want: time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC),
+		},
+		{
+			name: "quarter",
+			in:   TimeRangeQuarter,
+			want: time.Date(2026, 3, 8, 12, 0, 0, 0, time.UTC),
+		},
+		{
+			name: "year",
+			in:   TimeRangeYear,
+			want: time.Date(2025, 6, 8, 12, 0, 0, 0, time.UTC),
+		},
+		{
+			name: "five years",
+			in:   TimeRangeFiveY,
+			want: time.Date(2021, 6, 8, 12, 0, 0, 0, time.UTC),
+		},
+		{
+			name: "unknown falls back to week",
+			in:   TimeRange("nonsense"),
+			want: time.Date(2026, 6, 1, 12, 0, 0, 0, time.UTC),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.in.Since(now)
+			if !got.Equal(tt.want) {
+				t.Fatalf("%q.Since(%v) = %v, want %v", tt.in, now, got, tt.want)
 			}
 		})
 	}

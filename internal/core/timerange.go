@@ -1,5 +1,7 @@
 package core
 
+import "time"
+
 type TimeRange string
 
 const (
@@ -36,4 +38,23 @@ func (r TimeRange) Next() TimeRange {
 
 func (r TimeRange) String() string {
 	return string(r)
+}
+
+func (r TimeRange) Since(now time.Time) time.Time {
+	switch r {
+	case TimeRangeDay:
+		return now.AddDate(0, 0, -1)
+	case TimeRangeWeek:
+		return now.AddDate(0, 0, -7)
+	case TimeRangeMonth:
+		return now.AddDate(0, -1, 0)
+	case TimeRangeQuarter:
+		return now.AddDate(0, -3, 0)
+	case TimeRangeYear:
+		return now.AddDate(-1, 0, 0)
+	case TimeRangeFiveY:
+		return now.AddDate(-5, 0, 0)
+	default:
+		return TimeRangeWeek.Since(now)
+	}
 }
