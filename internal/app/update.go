@@ -1,6 +1,8 @@
 package app
 
-import tea "github.com/charmbracelet/bubbletea"
+import (
+	tea "github.com/charmbracelet/bubbletea"
+)
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -9,6 +11,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Height = msg.Height
 		return m, nil
 
+	case topicStoriesLoadedMsg:
+		m.Stories[msg.TopicID] = msg.Stories
+		m.Err = nil
+
+		if m.ActiveStory >= len(m.CurrentStories()) {
+			m.ActiveStory = 0
+		}
+
+		return m, nil
+
+	case topicRefreshFailedMsg:
+		m.Err = msg.Err
+		return m, nil
 	case tea.KeyMsg:
 		return m.handleKey(msg)
 	}
@@ -37,10 +52,12 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "h", "left":
 		m.LeaderPending = false
 		m.previousTopic()
+		return m, loadTopicStoriesCmd(m.Services, m.CurrentTopic(), m.TimeRange)
 
 	case "l", "right":
 		m.LeaderPending = false
 		m.nextTopic()
+		return m, loadTopicStoriesCmd(m.Services, m.CurrentTopic(), m.TimeRange)
 
 	case "j", "down":
 		m.LeaderPending = false
@@ -53,6 +70,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "t":
 		m.LeaderPending = false
 		m.TimeRange = m.TimeRange.Next()
+		return m, loadTopicStoriesCmd(m.Services, m.CurrentTopic(), m.TimeRange)
 
 	case ",":
 		m.LeaderPending = true
@@ -69,6 +87,15 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.OverlayText = text
 			m.OverlayOpen = true
 		}
+
+	case "r":
+		m.LeaderPending = false
+		return m, refreshTopicCmd(m.Services, m.CurrentTopic(), m.TimeRange)
+
+	case "R":
+		m.LeaderPending = false
+		return m, refreshAllTopicsCmd(m.Services, m.Topics, m.TimeRange)
+
 	default:
 		m.LeaderPending = false
 	}

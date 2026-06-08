@@ -56,7 +56,11 @@ func NewModel(topics []core.Topic, servicesArg ...Services) Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	if m.Services.Store == nil {
+		return nil
+	}
+
+	return refreshAllTopicsCmd(m.Services, m.Topics, m.TimeRange)
 }
 
 func (m Model) CurrentTopic() core.Topic {
