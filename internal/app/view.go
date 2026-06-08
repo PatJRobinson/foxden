@@ -137,7 +137,12 @@ func (m Model) renderFooter() string {
 		leader = " leader"
 	}
 
+	status := ""
+	if m.LoadingCount > 0 {
+		status = fmt.Sprintf("  loading %d...", m.LoadingCount)
+	}
+
 	return footerStyle.Render(
-		fmt.Sprintf("h/l tabs  j/k stories  t range  ,+space summary soon  q quit%s", leader),
+		fmt.Sprintf("h/l tabs  j/k stories  t range  ,+space summary soon  q quit%s%s", leader, status),
 	)
 }

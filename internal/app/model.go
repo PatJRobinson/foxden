@@ -27,9 +27,14 @@ type Model struct {
 	OverlayText string
 	Summariser  ai.Summariser
 
-	Services Services
+	Services     Services
+	LoadingCount int
 
 	Err error
+}
+
+func (m Model) IsLoading() bool {
+	return m.LoadingCount > 0
 }
 
 func NewModel(topics []core.Topic, servicesArg ...Services) Model {
@@ -44,14 +49,20 @@ func NewModel(topics []core.Topic, servicesArg ...Services) Model {
 
 	stories := DemoStories(topics)
 
+	loadingCount := 0
+	if services.Store != nil {
+		loadingCount = len(topics)
+	}
+
 	return Model{
-		Topics:      topics,
-		ActiveTopic: 0,
-		ActiveStory: 0,
-		TimeRange:   initialTimeRange(topics[0]),
-		Stories:     stories,
-		Summariser:  ai.PlaceholderSummariser{},
-		Services:    services,
+		Topics:       topics,
+		ActiveTopic:  0,
+		ActiveStory:  0,
+		TimeRange:    initialTimeRange(topics[0]),
+		Stories:      stories,
+		Summariser:   ai.PlaceholderSummariser{},
+		Services:     services,
+		LoadingCount: loadingCount,
 	}
 }
 

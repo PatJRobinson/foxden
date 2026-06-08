@@ -12,6 +12,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case topicStoriesLoadedMsg:
+		if m.LoadingCount > 0 {
+			m.LoadingCount--
+		}
+
 		m.Stories[msg.TopicID] = msg.Stories
 		m.Err = nil
 
@@ -22,8 +26,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case topicRefreshFailedMsg:
+		if m.LoadingCount > 0 {
+			m.LoadingCount--
+		}
+
 		m.Err = msg.Err
 		return m, nil
+
 	case tea.KeyMsg:
 		return m.handleKey(msg)
 	}
@@ -90,10 +99,12 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "r":
 		m.LeaderPending = false
+		m.LoadingCount = 1
 		return m, refreshTopicCmd(m.Services, m.CurrentTopic(), m.TimeRange)
 
 	case "R":
 		m.LeaderPending = false
+		m.LoadingCount = len(m.Topics)
 		return m, refreshAllTopicsCmd(m.Services, m.Topics, m.TimeRange)
 
 	default:
