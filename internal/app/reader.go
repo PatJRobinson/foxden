@@ -77,19 +77,20 @@ func wrapText(text string, width int) []string {
 	var lines []string
 
 	paragraphs := strings.Split(text, "\n")
+	lastWasBlank := false
+
 	for _, paragraph := range paragraphs {
 		paragraph = strings.TrimSpace(paragraph)
 		if paragraph == "" {
-			lines = append(lines, "")
+			if !lastWasBlank && len(lines) > 0 {
+				lines = append(lines, "")
+				lastWasBlank = true
+			}
 			continue
 		}
 
 		lines = append(lines, wrapParagraph(paragraph, width)...)
-		lines = append(lines, "")
-	}
-
-	if len(lines) > 0 && lines[len(lines)-1] == "" {
-		lines = lines[:len(lines)-1]
+		lastWasBlank = false
 	}
 
 	return lines
