@@ -9,6 +9,14 @@ import (
 	"github.com/patjrobinson/foxden/internal/core"
 )
 
+type ViewMode int
+
+const (
+	ViewModeList ViewMode = iota
+	ViewModeReader
+	ViewModeSummary
+)
+
 type Model struct {
 	Topics []core.Topic
 
@@ -23,6 +31,11 @@ type Model struct {
 	Height int
 
 	LeaderPending bool
+
+	ViewMode ViewMode
+
+	ReaderStory core.Story
+	ReaderOffset int
 
 	OverlayOpen bool
 	OverlayText string
@@ -121,6 +134,30 @@ func (m Model) BuildSummary() (string, error) {
 	return summary.Text, nil
 }
 
+func (m Model) InReader() bool {
+	return m.ViewMode == ViewModeReader
+}
+
+func (m Model) OpenReader() Model {
+	story, ok := m.CurrentStory()
+	if !ok {
+		return m
+	}
+
+	m.ReaderStory = story
+	m.ReaderOffset = 0
+	m.ViewMode = ViewModeReader
+	m.LeaderPending = false
+
+	return m
+}
+
+func (m Model) CloseReader() Model {
+	m.ViewMode = ViewModeList
+	m.ReaderOffset = 0
+	return m
+}
+
 func initialTimeRange(topic core.Topic) core.TimeRange {
 	switch topic.Summary.DefaultRange {
 	case string(core.TimeRangeDay):
@@ -139,3 +176,4 @@ func initialTimeRange(topic core.Topic) core.TimeRange {
 		return core.TimeRangeWeek
 	}
 }
+
