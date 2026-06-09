@@ -8,6 +8,9 @@ import (
 )
 
 func (m Model) View() string {
+	if m.ViewMode == ViewModeReader {
+		return m.renderReader()
+	}
 	if m.OverlayOpen {
 		return m.renderOverlay()
 	}
