@@ -42,6 +42,42 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.ViewMode == ViewModeReader {
+		switch msg.String() {
+		case "esc", "q":
+			m = m.CloseReader()
+			return m, nil
+
+		case "ctrl+c":
+			return m, tea.Quit
+
+		case "j", "down":
+			m.scrollReaderDown(1)
+			return m, nil
+
+		case "k", "up":
+			m.scrollReaderUp(1)
+			return m, nil
+
+		case "ctrl+d", "pgdown":
+			m.scrollReaderDown(m.readerPageSize())
+			return m, nil
+
+		case "ctrl+u", "pgup":
+			m.scrollReaderUp(m.readerPageSize())
+			return m, nil
+
+		case "g":
+			m.ReaderOffset = 0
+			return m, nil
+
+		case "G":
+			m.ReaderOffset = m.readerMaxOffset()
+			return m, nil
+		}
+
+		return m, nil
+	}
 	if m.OverlayOpen {
 		switch msg.String() {
 		case "esc", "q":
@@ -99,6 +135,10 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.OverlayText = text
 			m.OverlayOpen = true
 		}
+
+	case "enter":
+		m = m.OpenReader()
+		return m, nil
 
 	case "r":
 		m.LeaderPending = false
