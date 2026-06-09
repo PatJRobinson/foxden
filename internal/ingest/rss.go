@@ -144,10 +144,11 @@ func storyID(topicID string, sourceID string, url string) string {
 }
 
 var (
-	htmlTagRE        = regexp.MustCompile(`<[^>]+>`)
+	horizontalWhitespaceRE = regexp.MustCompile(`[ \t\r\f\v]+`)
+	manyBlankLinesRE      = regexp.MustCompile(`\n{3,}`)
 	whitespaceRE     = regexp.MustCompile(`\s+`)
-	discourseQuoteRE = regexp.MustCompile(`(?is)<aside[^>]*class="quote"[^>]*>.*?</aside>`)
 )
+
 
 func cleanFeedText(value string) string {
 	value = strings.TrimSpace(value)
@@ -166,15 +167,10 @@ func cleanFeedText(value string) string {
 		switch tokenType {
 		case nethtml.ErrorToken:
 			if tokenizer.Err() == io.EOF {
-				text := html.UnescapeString(b.String())
-				text = whitespaceRE.ReplaceAllString(text, " ")
-				return strings.TrimSpace(text)
+				return normalizeExtractedText(b.String())
 			}
 
-			// Fall back to a simple unescape if tokenization fails.
-			text := html.UnescapeString(value)
-			text = whitespaceRE.ReplaceAllString(text, " ")
-			return strings.TrimSpace(text)
+			return normalizeExtractedText(value)
 
 		case nethtml.StartTagToken:
 			token := tokenizer.Token()
@@ -194,8 +190,11 @@ func cleanFeedText(value string) string {
 				continue
 			}
 
-			if tag == "p" || tag == "br" || tag == "li" || tag == "div" || tag == "blockquote" {
-				b.WriteString(" ")
+			switch tag {
+			case "br":
+				b.WriteString("\n")
+			case "p", "li", "div", "blockquote":
+				b.WriteString("\n\n")
 			}
 
 		case nethtml.EndTagToken:
@@ -209,8 +208,9 @@ func cleanFeedText(value string) string {
 				continue
 			}
 
-			if tag == "p" || tag == "li" || tag == "div" || tag == "blockquote" {
-				b.WriteString(" ")
+			switch tag {
+			case "p", "li", "div", "blockquote":
+				b.WriteString("\n\n")
 			}
 
 		case nethtml.TextToken:
@@ -225,6 +225,22 @@ func cleanFeedText(value string) string {
 			}
 		}
 	}
+}
+
+func normalizeExtractedText(value string) string {
+	value = html.UnescapeString(value)
+	value = strings.ReplaceAll(value, "\r\n", "\n")
+	value = strings.ReplaceAll(value, "\r", "\n")
+
+	lines := strings.Split(value, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimSpace(horizontalWhitespaceRE.ReplaceAllString(line, " "))
+	}
+
+	value = strings.Join(lines, "\n")
+	value = manyBlankLinesRE.ReplaceAllString(value, "\n\n")
+
+	return strings.TrimSpace(value)
 }
 
 func hasClass(token nethtml.Token, className string) bool {
