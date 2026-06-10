@@ -6,6 +6,11 @@ import (
 	"unicode/utf8"
 )
 
+type renderedReaderLine struct {
+	Text string
+	Kind readerLineKind
+}
+
 func (m Model) renderReader() string {
 	story := m.ReaderStory
 
@@ -36,6 +41,7 @@ func (m Model) renderReader() string {
 	b.WriteString("\n")
 	b.WriteString(mutedStyle.Render(fmt.Sprintf("%s  %s", story.SourceName, story.URL)))
 	b.WriteString("\n")
+
 	b.WriteString(mutedStyle.Render(fmt.Sprintf("line %d/%d", start+1, max(1, len(lines)))))
 	b.WriteString("\n\n")
 
@@ -44,7 +50,7 @@ func (m Model) renderReader() string {
 		b.WriteString("\n")
 	} else {
 		for _, line := range lines[start:end] {
-			b.WriteString(line)
+			b.WriteString(m.renderReaderLine(line))
 			b.WriteString("\n")
 		}
 	}
@@ -67,7 +73,22 @@ func (m Model) renderReader() string {
 	return b.String()
 }
 
-func (m Model) readerLines() []string {
+func (m Model) renderReaderLine(line renderedReaderLine) string {
+	switch line.Kind {
+	case readerLineBlank:
+		return ""
+	case readerLineHeading:
+		return subtitleStyle.Render(line.Text)
+	case readerLineCode:
+		return codeStyle.Render(line.Text)
+	case readerLineList:
+		return line.Text
+	default:
+		return line.Text
+	}
+}
+
+func (m Model) readerLines() []renderedReaderLine {
 	story := m.ReaderStory
 
 	body := strings.TrimSpace(story.Content)
@@ -87,7 +108,91 @@ func (m Model) readerLines() []string {
 		width = 100
 	}
 
-	return wrapText(body, width)
+	return formatReaderText(body, width)
+}
+
+func formatReaderText(text string, width int) []renderedReaderLine {
+	rawLines := strings.Split(normalizeReaderInput(text), "\n")
+
+	var out []renderedReaderLine
+	lastWasBlank := true
+
+	for _, rawLine := range rawLines {
+		line := strings.TrimRight(rawLine, " \t")
+		kind := classifyReaderLine(line)
+
+		switch kind {
+		case readerLineBlank:
+			if !lastWasBlank {
+				out = append(out, renderedReaderLine{Kind: readerLineBlank})
+				lastWasBlank = true
+			}
+
+		case readerLineCode:
+			out = append(out, renderedReaderLine{
+				Text: line,
+				Kind: readerLineCode,
+			})
+			lastWasBlank = false
+
+		case readerLineHeading:
+			if !lastWasBlank {
+				out = append(out, renderedReaderLine{Kind: readerLineBlank})
+			}
+			out = append(out, renderedReaderLine{
+				Text: strings.TrimSpace(line),
+				Kind: readerLineHeading,
+			})
+			lastWasBlank = false
+
+		case readerLineList:
+			wrapped := wrapParagraphWithIndent(strings.TrimSpace(line), width, "  ")
+			for _, wrappedLine := range wrapped {
+				out = append(out, renderedReaderLine{
+					Text: wrappedLine,
+					Kind: readerLineList,
+				})
+			}
+			lastWasBlank = false
+
+		default:
+			for _, wrappedLine := range wrapParagraph(strings.TrimSpace(line), width) {
+				out = append(out, renderedReaderLine{
+					Text: wrappedLine,
+					Kind: readerLineProse,
+				})
+			}
+			lastWasBlank = false
+		}
+	}
+
+	return trimTrailingBlankReaderLines(out)
+}
+
+func normalizeReaderInput(text string) string {
+	text = strings.ReplaceAll(text, "\r\n", "\n")
+	text = strings.ReplaceAll(text, "\r", "\n")
+	return strings.TrimSpace(text)
+}
+
+func trimTrailingBlankReaderLines(lines []renderedReaderLine) []renderedReaderLine {
+	for len(lines) > 0 && lines[len(lines)-1].Kind == readerLineBlank {
+		lines = lines[:len(lines)-1]
+	}
+	return lines
+}
+
+func wrapParagraphWithIndent(paragraph string, width int, continuationIndent string) []string {
+	lines := wrapParagraph(paragraph, width)
+	if len(lines) <= 1 {
+		return lines
+	}
+
+	for i := 1; i < len(lines); i++ {
+		lines[i] = continuationIndent + lines[i]
+	}
+
+	return lines
 }
 
 func wrapText(text string, width int) []string {
