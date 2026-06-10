@@ -7,10 +7,6 @@ var (
 			Bold(true).
 			Padding(0, 1)
 
-	subtitleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Padding(0, 1)
-
 	activeTabStyle = lipgloss.NewStyle().
 			Bold(true).
 			Underline(true).
@@ -25,9 +21,6 @@ var (
 	mutedStyle = lipgloss.NewStyle().
 			Faint(true)
 
-	codeStyle = lipgloss.NewStyle().
-			Faint(true)
-
 	footerStyle = lipgloss.NewStyle().
 			Faint(true)
 
@@ -40,4 +33,13 @@ var (
 
 	errorStyle = lipgloss.NewStyle().
 			Bold(true)
+
+	readerHeadingStyle = lipgloss.NewStyle().
+			Bold(true).
+			MarginTop(1)
+
+	readerCodeStyle = lipgloss.NewStyle().
+			PaddingLeft(2)
+
+	readerMetaStyle = mutedStyle
 )

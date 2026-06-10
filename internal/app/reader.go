@@ -78,9 +78,9 @@ func (m Model) renderReaderLine(line renderedReaderLine) string {
 	case readerLineBlank:
 		return ""
 	case readerLineHeading:
-		return subtitleStyle.Render(line.Text)
+		return readerHeadingStyle.Render(line.Text)
 	case readerLineCode:
-		return codeStyle.Render(line.Text)
+		return readerCodeStyle.Render(line.Text)
 	case readerLineList:
 		return line.Text
 	default:
