@@ -34,7 +34,7 @@ type Model struct {
 
 	ViewMode ViewMode
 
-	ReaderStory core.Story
+	ReaderStory  core.Story
 	ReaderOffset int
 
 	OverlayOpen bool
@@ -178,4 +178,3 @@ func initialTimeRange(topic core.Topic) core.TimeRange {
 		return core.TimeRangeWeek
 	}
 }
-

@@ -2,18 +2,19 @@ package app
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"github.com/patjrobinson/foxden/internal/article"
 	"github.com/patjrobinson/foxden/internal/core"
 	"github.com/patjrobinson/foxden/internal/ingest"
 	"github.com/patjrobinson/foxden/internal/store"
-	"github.com/patjrobinson/foxden/internal/article"
 )
 
 type Services struct {
-	Store  *store.DB
-	Ingest ingest.Manager
-	Now    func() time.Time
+	Store   *store.DB
+	Ingest  ingest.Manager
+	Now     func() time.Time
 	Article article.Extractor
 }
 
@@ -24,7 +25,7 @@ func NewServices(db *store.DB) Services {
 			"rss":             ingest.NewRSSFetcher(),
 			"github_releases": ingest.NewGitHubReleasesFetcher(),
 		}),
-		Now: time.Now,
+		Now:     time.Now,
 		Article: article.NewExtractor(),
 	}
 }

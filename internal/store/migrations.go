@@ -8,9 +8,6 @@ CREATE TABLE IF NOT EXISTS stories (
     source_name TEXT NOT NULL,
     title TEXT NOT NULL,
     url TEXT NOT NULL,
-		content_source TEXT DEFAULT 'feed',
-		article_fetched_at TEXT,
-		article_fetch_error,
     author TEXT,
     published_at TEXT,
     fetched_at TEXT NOT NULL,
@@ -18,7 +15,11 @@ CREATE TABLE IF NOT EXISTS stories (
     content TEXT,
     score REAL DEFAULT 0,
     tags_json TEXT,
+		content_source TEXT DEFAULT 'feed',
+		article_fetched_at TEXT,
+		article_fetch_error TEXT,
     UNIQUE(topic_id, url)
+);
 
 
 CREATE TABLE IF NOT EXISTS summaries (

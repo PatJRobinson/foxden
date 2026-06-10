@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/patjrobinson/foxden/internal/core"
 )
@@ -47,7 +47,7 @@ ON CONFLICT(topic_id, url) DO UPDATE SET
     excerpt = excluded.excerpt,
     content = excluded.content,
     score = excluded.score,
-    tags_json = excluded.tags_json;
+    tags_json = excluded.tags_json,
 		content_source = excluded.content_source,
 		article_fetched_at = excluded.article_fetched_at,
 		article_fetch_error = excluded.article_fetch_error
@@ -183,7 +183,7 @@ func scanStory(row storyScanner) (core.Story, error) {
 		&tagsJSON,
 		&contentSource,
 		&articleFetchedAt,
-		&articleFetchError
+		&articleFetchError,
 	); err != nil {
 		return core.Story{}, fmt.Errorf("scan story: %w", err)
 	}
