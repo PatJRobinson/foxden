@@ -61,3 +61,17 @@ func loadTopicStoriesCmd(services Services, topic core.Topic, r core.TimeRange) 
 		}
 	}
 }
+
+func fetchArticleCmd(services Services, story core.Story) tea.Cmd {
+	return func() tea.Msg {
+		updated, err := services.FetchArticleForStory(context.Background(), story)
+		if err != nil {
+			return articleFetchFailedMsg{
+				StoryID: story.ID,
+				Err:     err,
+			}
+		}
+
+		return articleFetchedMsg{Story: updated}
+	}
+}

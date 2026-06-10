@@ -44,6 +44,8 @@ type Model struct {
 	Services     Services
 	LoadingCount int
 
+	FetchingArticle bool
+
 	Err error
 }
 

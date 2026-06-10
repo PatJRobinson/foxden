@@ -36,6 +36,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		return m.handleKey(msg)
+
+	case articleFetchedMsg:
+		m.FetchingArticle = false
+		m.Err = nil
+		m.updateStory(msg.Story)
+
+		if m.ViewMode == ViewModeReader && m.ReaderStory.ID == msg.Story.ID {
+			m.ReaderStory = msg.Story
+			m.ReaderOffset = 0
+		}
+
+		return m, nil
+
+	case articleFetchFailedMsg:
+		m.FetchingArticle = false
+		m.Err = msg.Err
+		return m, nil
 	}
 
 	return m, nil
@@ -74,6 +91,15 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		case "G":
 			m.ReaderOffset = m.readerMaxOffset()
 			return m, nil
+
+		case "f":
+			story := m.ReaderStory
+			if story.ID == "" {
+				return m, nil
+			}
+			m.FetchingArticle = true
+			m.Err = nil
+			return m, fetchArticleCmd(m.Services, story)
 		}
 
 		return m, nil
@@ -157,6 +183,15 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "pgup", "ctrl+u":
 		m.LeaderPending = false
 		m.pageUp()
+
+	case "f":
+		story, ok := m.CurrentStory()
+		if !ok {
+			return m, nil
+		}
+		m.FetchingArticle = true
+		m.Err = nil
+		return m, fetchArticleCmd(m.Services, story)
 
 	default:
 		m.LeaderPending = false
@@ -291,4 +326,15 @@ func (m *Model) pageUp() {
 	}
 
 	m.ensureSelectedStoryVisible()
+}
+
+func (m *Model) updateStory(updated core.Story) {
+	stories := m.Stories[updated.TopicID]
+	for i := range stories {
+		if stories[i].ID == updated.ID {
+			stories[i] = updated
+			m.Stories[updated.TopicID] = stories
+			return
+		}
+	}
 }

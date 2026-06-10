@@ -11,3 +11,12 @@ type topicRefreshFailedMsg struct {
 	TopicID string
 	Err     error
 }
+
+type articleFetchedMsg struct {
+	Story core.Story
+}
+
+type articleFetchFailedMsg struct {
+	StoryID string
+	Err     error
+}
