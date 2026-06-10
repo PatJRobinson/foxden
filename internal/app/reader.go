@@ -25,6 +25,11 @@ func (m Model) renderReader() string {
 		end = len(lines)
 	}
 
+	source := story.ContentSource
+	if source == "" {
+		source = "feed"
+	}
+
 	var b strings.Builder
 
 	b.WriteString(titleStyle.Render(story.Title))
@@ -44,8 +49,20 @@ func (m Model) renderReader() string {
 		}
 	}
 
+	b.WriteString(mutedStyle.Render(fmt.Sprintf("content: %s", source)))
+
+	if m.FetchingArticle {
+		b.WriteString("\n")
+		b.WriteString(mutedStyle.Render("fetching article..."))
+	}
+
+	if story.ArticleFetchError != "" {
+		b.WriteString("\n")
+		b.WriteString(errorStyle.Render("article fetch failed: " + story.ArticleFetchError))
+	}
+
 	b.WriteString("\n")
-	b.WriteString(footerStyle.Render("j/k scroll  ctrl+d/u page  g/G top/bottom  esc/q back"))
+	b.WriteString(footerStyle.Render("f fetch article j/k scroll  ctrl+d/u page  g/G top/bottom  esc/q back"))
 
 	return b.String()
 }
