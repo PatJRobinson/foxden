@@ -26,6 +26,54 @@ func (db *DB) Init(ctx context.Context) error {
 		return fmt.Errorf("initialize schema: %w", err)
 	}
 
+	if err := db.addColumnIfMissing(ctx, "stories", "content_source", "TEXT DEFAULT 'feed'"); err != nil {
+		return err
+	}
+
+	if err := db.addColumnIfMissing(ctx, "stories", "article_fetched_at", "TEXT"); err != nil {
+		return err
+	}
+
+	if err := db.addColumnIfMissing(ctx, "stories", "article_fetch_error", "TEXT"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *DB) addColumnIfMissing(ctx context.Context, table string, column string, definition string) error {
+	rows, err := db.sql.QueryContext(ctx, fmt.Sprintf(`PRAGMA table_info(%s)`, table))
+	if err != nil {
+		return fmt.Errorf("inspect table %q: %w", table, err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var cid int
+		var name string
+		var typ string
+		var notNull int
+		var defaultValue any
+		var pk int
+
+		if err := rows.Scan(&cid, &name, &typ, &notNull, &defaultValue, &pk); err != nil {
+			return fmt.Errorf("scan table info for %q: %w", table, err)
+		}
+
+		if name == column {
+			return nil
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate table info for %q: %w", table, err)
+	}
+
+	query := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", table, column, definition)
+	if _, err := db.sql.ExecContext(ctx, query); err != nil {
+		return fmt.Errorf("add column %s.%s: %w", table, column, err)
+	}
+
 	return nil
 }
 

@@ -16,4 +16,7 @@ type Story struct {
 	Content     string
 	Score       float64
 	Tags        []string
+	ContentSource     string
+	ArticleFetchedAt  time.Time
+	ArticleFetchError string
 }

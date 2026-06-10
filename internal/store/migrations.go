@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS stories (
     source_name TEXT NOT NULL,
     title TEXT NOT NULL,
     url TEXT NOT NULL,
+		content_source TEXT DEFAULT 'feed',
+		article_fetched_at TEXT,
+		article_fetch_error,
     author TEXT,
     published_at TEXT,
     fetched_at TEXT NOT NULL,
@@ -16,7 +19,7 @@ CREATE TABLE IF NOT EXISTS stories (
     score REAL DEFAULT 0,
     tags_json TEXT,
     UNIQUE(topic_id, url)
-);
+
 
 CREATE TABLE IF NOT EXISTS summaries (
     id TEXT PRIMARY KEY,
@@ -27,4 +30,9 @@ CREATE TABLE IF NOT EXISTS summaries (
     generated_at TEXT NOT NULL,
     content TEXT NOT NULL
 );
+`
+const storyArticleColumnsMigration = `
+ALTER TABLE stories ADD COLUMN content_source TEXT DEFAULT 'feed';
+ALTER TABLE stories ADD COLUMN article_fetched_at TEXT;
+ALTER TABLE stories ADD COLUMN article_fetch_error TEXT;
 `
