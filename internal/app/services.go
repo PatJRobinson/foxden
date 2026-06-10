@@ -7,12 +7,14 @@ import (
 	"github.com/patjrobinson/foxden/internal/core"
 	"github.com/patjrobinson/foxden/internal/ingest"
 	"github.com/patjrobinson/foxden/internal/store"
+	"github.com/patjrobinson/foxden/internal/article"
 )
 
 type Services struct {
 	Store  *store.DB
 	Ingest ingest.Manager
 	Now    func() time.Time
+	Article article.Extractor
 }
 
 func NewServices(db *store.DB) Services {
@@ -23,6 +25,7 @@ func NewServices(db *store.DB) Services {
 			"github_releases": ingest.NewGitHubReleasesFetcher(),
 		}),
 		Now: time.Now,
+		Article: article.NewExtractor(),
 	}
 }
 
@@ -52,4 +55,42 @@ func (s Services) LoadStories(ctx context.Context, topic core.Topic, r core.Time
 	}
 
 	return s.Store.StoriesForTopic(ctx, topic.ID, r.Since(now))
+}
+
+func (s Services) FetchArticleForStory(ctx context.Context, story core.Story) (core.Story, error) {
+	extracted, err := s.Article.Extract(ctx, story.URL)
+	if err != nil {
+		if s.Store != nil {
+			_ = s.Store.MarkStoryArticleFetchError(ctx, story.ID, time.Now(), err)
+		}
+		return story, err
+	}
+
+	content := extracted.TextContent
+	excerpt := extracted.Excerpt
+	if strings.TrimSpace(excerpt) == "" {
+		excerpt = truncateForService(content, 500)
+	}
+
+	if s.Store != nil {
+		if err := s.Store.UpdateStoryArticle(ctx, story.ID, content, excerpt, extracted.FetchedAt); err != nil {
+			return story, err
+		}
+	}
+
+	story.Content = content
+	story.Excerpt = excerpt
+	story.ContentSource = "article"
+	story.ArticleFetchedAt = extracted.FetchedAt
+	story.ArticleFetchError = ""
+
+	return story, nil
+}
+
+func truncateForService(value string, max int) string {
+	value = strings.TrimSpace(value)
+	if max <= 0 || len(value) <= max {
+		return value
+	}
+	return strings.TrimSpace(value[:max]) + "…"
 }
