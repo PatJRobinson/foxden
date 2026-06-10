@@ -246,3 +246,47 @@ func formatTime(t time.Time) any {
 
 	return t.UTC().Format(time.RFC3339)
 }
+
+func (db *DB) UpdateStoryArticle(ctx context.Context, storyID string, content string, excerpt string, fetchedAt time.Time) error {
+	if strings.TrimSpace(storyID) == "" {
+		return fmt.Errorf("missing story id")
+	}
+
+	if _, err := db.sql.ExecContext(ctx, `
+UPDATE stories
+SET
+    content = ?,
+    excerpt = ?,
+    content_source = ?,
+    article_fetched_at = ?,
+    article_fetch_error = NULL
+WHERE id = ?
+`, content, excerpt, "article", formatTime(fetchedAt), storyID); err != nil {
+		return fmt.Errorf("update article content for story %q: %w", storyID, err)
+	}
+
+	return nil
+}
+
+func (db *DB) MarkStoryArticleFetchError(ctx context.Context, storyID string, fetchedAt time.Time, fetchErr error) error {
+	if strings.TrimSpace(storyID) == "" {
+		return fmt.Errorf("missing story id")
+	}
+
+	message := ""
+	if fetchErr != nil {
+		message = fetchErr.Error()
+	}
+
+	if _, err := db.sql.ExecContext(ctx, `
+UPDATE stories
+SET
+    article_fetched_at = ?,
+    article_fetch_error = ?
+WHERE id = ?
+`, formatTime(fetchedAt), message, storyID); err != nil {
+		return fmt.Errorf("mark article fetch error for story %q: %w", storyID, err)
+	}
+
+	return nil
+}
