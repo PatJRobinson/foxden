@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"strings"
 
 	"github.com/patjrobinson/foxden/internal/core"
 )
@@ -31,8 +32,11 @@ INSERT INTO stories (
     excerpt,
     content,
     score,
-    tags_json
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    tags_json,
+		content_source,
+		article_fetched_at,
+		article_fetch_error
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(topic_id, url) DO UPDATE SET
     source_id = excluded.source_id,
     source_name = excluded.source_name,
@@ -44,6 +48,9 @@ ON CONFLICT(topic_id, url) DO UPDATE SET
     content = excluded.content,
     score = excluded.score,
     tags_json = excluded.tags_json;
+		content_source = excluded.content_source,
+		article_fetched_at = excluded.article_fetched_at,
+		article_fetch_error = excluded.article_fetch_error
 `)
 	if err != nil {
 		return fmt.Errorf("prepare story upsert: %w", err)
@@ -71,6 +78,9 @@ ON CONFLICT(topic_id, url) DO UPDATE SET
 			story.Content,
 			story.Score,
 			string(tagsJSON),
+			contentSource(story.ContentSource),
+			formatTime(story.ArticleFetchedAt),
+			story.ArticleFetchError,
 		); err != nil {
 			return fmt.Errorf("upsert story %q: %w", story.ID, err)
 		}
@@ -81,6 +91,14 @@ ON CONFLICT(topic_id, url) DO UPDATE SET
 	}
 
 	return nil
+}
+
+func contentSource(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "feed"
+	}
+	return value
 }
 
 func (db *DB) StoriesForTopic(ctx context.Context, topicID string, since time.Time) ([]core.Story, error) {
@@ -98,7 +116,10 @@ SELECT
     excerpt,
     content,
     score,
-    tags_json
+    tags_json,
+		content_source,
+		article_fetched_at,
+		article_fetch_error
 FROM stories
 WHERE topic_id = ?
   AND (
@@ -142,6 +163,9 @@ func scanStory(row storyScanner) (core.Story, error) {
 	var publishedAt sql.NullString
 	var fetchedAt string
 	var tagsJSON sql.NullString
+	var contentSource sql.NullString
+	var articleFetchedAt sql.NullString
+	var articleFetchError sql.NullString
 
 	if err := row.Scan(
 		&story.ID,
@@ -157,6 +181,9 @@ func scanStory(row storyScanner) (core.Story, error) {
 		&story.Content,
 		&story.Score,
 		&tagsJSON,
+		&contentSource,
+		&articleFetchedAt,
+		&articleFetchError
 	); err != nil {
 		return core.Story{}, fmt.Errorf("scan story: %w", err)
 	}
@@ -183,6 +210,22 @@ func scanStory(row storyScanner) (core.Story, error) {
 		if err := json.Unmarshal([]byte(tagsJSON.String), &story.Tags); err != nil {
 			return core.Story{}, fmt.Errorf("parse tags for story %q: %w", story.ID, err)
 		}
+	}
+
+	if contentSource.Valid {
+		story.ContentSource = contentSource.String
+	}
+
+	if articleFetchedAt.Valid && articleFetchedAt.String != "" {
+		parsed, err := time.Parse(time.RFC3339, articleFetchedAt.String)
+		if err != nil {
+			return core.Story{}, fmt.Errorf("parse article_fetched_at for story %q: %w", story.ID, err)
+		}
+		story.ArticleFetchedAt = parsed
+	}
+
+	if articleFetchError.Valid {
+		story.ArticleFetchError = articleFetchError.String
 	}
 
 	return story, nil
