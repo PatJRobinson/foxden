@@ -49,8 +49,8 @@ func isCodeLikeLine(line string) bool {
 		"git ",
 		"nix ",
 		"make",
+		"sudo",
 		"./",
-		"πfs ",
 		"curl ",
 		"wget ",
 	}

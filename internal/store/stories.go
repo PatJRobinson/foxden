@@ -80,7 +80,7 @@ ON CONFLICT(topic_id, url) DO UPDATE SET
 			string(tagsJSON),
 			contentSource(story.ContentSource),
 			formatTime(story.ArticleFetchedAt),
-			story.ArticleFetchError,
+			nullableString(story.ArticleFetchError),
 		); err != nil {
 			return fmt.Errorf("upsert story %q: %w", story.ID, err)
 		}
@@ -98,6 +98,15 @@ func contentSource(value string) string {
 	if value == "" {
 		return "feed"
 	}
+	return value
+}
+
+func nullableString(value string) any {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return nil
+	}
+
 	return value
 }
 
