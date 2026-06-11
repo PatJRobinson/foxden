@@ -28,7 +28,7 @@
 
         # First build will intentionally fail and tell you the real hash.
         # Replace this with the hash from the error message.
-        vendorHash = "sha256-CowlwrEFU8x1f2d99uccRKSwjA3NhqNWL4yin1j0vNs=";
+        vendorHash = "sha256-atyn5Z7JyNZuoBv7nWyDNm8VX1yVPsyvaTDpYGWLKvo=";
 
         # If your main package is under ./cmd/foxden
         subPackages = ["cmd/foxden"];
