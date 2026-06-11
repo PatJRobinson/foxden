@@ -10,6 +10,7 @@ The app is intended to feel Vim-like:
 
 * `h` / `l` switch between topic tabs
 * `j` / `k` move through stories
+* `f` fetches readable article text for the selected story
 * `enter` opens the selected story in the in-app reader
 * `t` cycles the active time range
 * `r` refreshes the active topic
@@ -42,11 +43,13 @@ Implemented:
 * Pluggable ingestion interfaces
 * SQLite schema and story upsert/query paths
 * Basic tests for config loading, time range cycling, ingestion manager behavior, storage, and reader wrapping
+* On-demand original article fetching
+* Readability-based article text extraction
+* Article fetch metadata stored in SQLite
 
 Not implemented yet:
 
 * Real web scraping
-* Original article fetching/extraction for headline-only feeds
 * Real AI provider integration
 * Opening stories in a browser
 * Search
@@ -135,6 +138,7 @@ For pure-Go SQLite, the project currently prefers `modernc.org/sqlite` to avoid 
 | `r`                  | Refresh active topic                              |
 | `R`                  | Refresh all topics                                |
 | `enter`              | Open selected story in the reader                 |
+| `f`                  | Fetch readable article text for selected story    |
 | `,`                  | Leader key                                        |
 | `,` then space       | Open placeholder AI summary overlay               |
 | `q`                  | Quit from main UI                                 |
@@ -148,6 +152,7 @@ For pure-Go SQLite, the project currently prefers `modernc.org/sqlite` to avoid 
 | `k` / up             | Scroll up      |
 | `ctrl+d` / page down | Page down      |
 | `ctrl+u` / page up   | Page up        |
+| `f`                  | Fetch/refetch readable article text |
 | `g`                  | Jump to top    |
 | `G`                  | Jump to bottom |
 | `esc`                | Close reader   |
@@ -229,19 +234,19 @@ Time ranges are used when loading stories from SQLite. They do not yet control h
 
 Press `enter` on a selected story to open it in the reader.
 
-The reader displays the stored story content from the local database. For sources like Discourse RSS or GitHub releases, this can include useful body text. For headline-only feeds such as Hacker News RSS, the stored content may only be a comments marker or short feed description until original article fetching is implemented.
+The reader displays story content from the local database. Depending on the source, this content may come from the original feed item, a GitHub release body, or an on-demand fetched article.
 
-This means the current reader is best understood as:
+For sources like Discourse RSS or GitHub releases, the feed/release content is often already useful. For headline-only feeds such as Hacker News RSS, the stored feed content may only contain a comments marker or short description. In those cases, press `f` to fetch the original article URL and extract readable text.
 
-```text
-stored feed/release content reader
-```
+Article fetching is on-demand. foxden does not fetch every linked article during normal RSS refresh.
 
-not yet:
+The current reader is best understood as:
 
 ```text
-full article readability extractor
+stored feed/release/article content reader
 ```
+
+It is not yet a full browser, Markdown renderer, or source-specific scraper.
 
 ## RSS and GitHub release ingestion
 
@@ -263,6 +268,16 @@ GitHub release sources use the repository configured in `topic.yaml`, for exampl
   repo: ros-navigation/navigation2
 ```
 
+## Article fetching
+
+Press `f` on a selected story to fetch the original story URL and extract readable article text.
+
+This is useful for headline-only feeds such as Hacker News RSS, where the feed entry may only include a title, link, and comments marker.
+
+Fetched article text is stored in SQLite and marked as article-sourced content. If extraction fails, foxden records the fetch error so the app can surface it in the UI.
+
+Article fetching is intentionally on-demand rather than automatic. This keeps normal feed refreshes fast and avoids eagerly downloading every linked page from every source.
+
 ## SQLite-backed persistence
 
 The app currently stores development data in:
@@ -276,6 +291,8 @@ in the project root.
 This is intentionally temporary. Later, the database should move to an XDG data directory.
 
 Stories are fetched from configured sources, normalized, upserted into SQLite, and then loaded back from SQLite into the TUI according to the active topic and time range.
+
+When original article fetching is used, extracted article text and fetch metadata are also stored in SQLite.
 
 ## Architecture
 
@@ -300,6 +317,9 @@ internal/ai/
 internal/ingest/
   Fetcher interface, refresh manager, RSS fetcher, and GitHub releases fetcher
 
+internal/article/
+  Original article fetching and readability extraction
+
 internal/store/
   SQLite open/init code, migrations, story upsert, and story query paths
 
@@ -309,13 +329,13 @@ topics/
 
 The intended flow is:
 
-```text
+```
 topic config
 → source fetchers
 → normalized stories
 → SQLite store
 → TUI story lists
-→ in-app reader / AI summary overlay
+→ in-app reader / on-demand article fetching / AI summary overlay
 ```
 
 The TUI should remain separate from ingestion, storage, and AI provider details.
@@ -330,12 +350,11 @@ Likely next branches:
 * Support Linux/macOS/BSD-friendly opener detection
 * Keep `enter` for in-app reader
 
-### Original article fetching
+### Reader formatting
 
-* Fetch original article URLs for headline-only sources
-* Extract readable article text
-* Store extracted text in SQLite
-* Show extracted content in the in-app reader
+* Preserve more structure from extracted articles
+* Improve headings, lists, and code-like blocks
+* Add lightweight reader styles without committing to a full Markdown renderer
 
 ### Real summary provider
 

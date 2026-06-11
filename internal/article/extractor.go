@@ -97,3 +97,6 @@ func (e Extractor) Extract(ctx context.Context, rawURL string) (ExtractedArticle
 		FetchedAt:   now,
 	}, nil
 }
+
+// TODO: Consider source-specific extractors for GitHub README pages, where
+// Readability can flatten code blocks and headings.

@@ -35,8 +35,8 @@ var (
 			Bold(true)
 
 	readerHeadingStyle = lipgloss.NewStyle().
-			Bold(true).
-			MarginTop(1)
+				Bold(true).
+				MarginTop(1)
 
 	readerCodeStyle = lipgloss.NewStyle().
 			PaddingLeft(2)
